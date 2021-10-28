@@ -24,8 +24,8 @@ public class Main {
 
     // 4. Заполняем на массив
     private static void initField() {
-        for(int i = 0; i < SIZE_X; i++) {
-            for(int j = 0; j < SIZE_Y; j++) {
+        for (int i = 0; i < SIZE_X; i++) {
+            for (int j = 0; j < SIZE_Y; j++) {
                 field[i][j] = EMPTY_DOT;
             }
         }
@@ -35,9 +35,9 @@ public class Main {
     private static void printField() {
         //6. украшаем картинку
         System.out.println("---------");
-        for(int i = 0; i < SIZE_X; i++) {
+        for (int i = 0; i < SIZE_X; i++) {
             System.out.print("|");
-            for(int j = 0; j < SIZE_Y; j++) {
+            for (int j = 0; j < SIZE_Y; j++) {
                 System.out.print(field[i][j] + "|");
             }
             System.out.println();
@@ -47,7 +47,7 @@ public class Main {
     }
 
     // 7. Метод который устанавливает символ
-    private static void setSym(int x, int y, char sym){
+    private static void setSym(int x, int y, char sym) {
         field[x][y] = sym;
     }
 
@@ -60,197 +60,242 @@ public class Main {
             System.out.println("Введите координаты: X Y (1-5)");
             x = scanner.nextInt() - 1;
             y = scanner.nextInt() - 1;
-        } while (!isCellValid(x,y));
+        } while (!isCellValid(x, y));
         setSym(x, y, PLAYER_DOT);
 
     }
 
+
+//    // 13. Ход ПК
+//    private static void aiStep() {
+//        int x;
+//        int y;
+//        do{
+//            x = rand.nextInt(SIZE_X);
+//            y = rand.nextInt(SIZE_Y);
+//        } while(!isCellValid(x,y));
+//        setSym(x, y, AI_DOT);
+//    }
+
     // 13. Ход ПК
-    private static void aiStep() {
-        int x;
-        int y;
-        do{
+    private static boolean aiStep(char sym) {
+        int x, y;
+        //блокировка ходов человека
+
+        for (int v = 0; v < SIZE_X; v++) {
+            for (int h = 0; h < SIZE_Y; h++) {
+
+                if (h + WIN_NUMS <= SIZE_Y) {
+                    if (v - WIN_NUMS > -2) {                            //вверх по диагонали
+                        if (checkUpDiag(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                            if (moveAIUpDiag(v, h, AI_DOT)) return true;
+                        }
+                    }
+                    if (v + WIN_NUMS <= SIZE_X) {                       //вниз по диагонали
+                        if (checkDownDiag(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                            if (moveAIDownDiag(v, h, AI_DOT)) return true;
+                        }
+                    }
+                }
+                if (h + WIN_NUMS <= SIZE_Y) {
+                    if (checkVert(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                        if (moveAIVert(AI_DOT)) return true;
+                    }
+                }
+                if (v + WIN_NUMS <= SIZE_X) {
+                    if (checkHoriz(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                        if (moveAIHoriz(AI_DOT)) return true;
+                    }
+                }
+            }
+        }
+
+        //игра на победу
+
+        for (int v = 0; v < SIZE_X; v++) {
+            for (int h = 0; h < SIZE_Y; h++) {
+
+                if (h + WIN_NUMS <= SIZE_Y) {
+                    if (v - WIN_NUMS > -2) {
+                        if (checkUpDiag(v, h, AI_DOT) == WIN_NUMS - 1) {
+                            if (moveAIUpDiag(v, h, AI_DOT)) return true;
+                        }
+                    }
+                    if (v + WIN_NUMS <= SIZE_X) {
+                        if (checkDownDiag(v, h, AI_DOT) == WIN_NUMS - 1) {
+                            if (moveAIDownDiag(v, h, AI_DOT)) return true;
+                        }
+                    }
+                }
+                if (h + WIN_NUMS <= SIZE_Y) {
+                    if (checkVert(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                        if (moveAIVert(AI_DOT)) return true;
+                    }
+                }
+                if (v + WIN_NUMS <= SIZE_X) {
+                    if (checkHoriz(v, h, PLAYER_DOT) == WIN_NUMS - 1) {
+                        if (moveAIHoriz(AI_DOT)) return true;
+                    }
+                }
+            }
+        }
+
+        //случайный ход
+        do {
             x = rand.nextInt(SIZE_X);
             y = rand.nextInt(SIZE_Y);
         } while(!isCellValid(x,y));
         setSym(x, y, AI_DOT);
+        return false;
     }
 
+    // ход ПК по горизонтали
+    private static boolean moveAIHoriz(char sym) {
+        int hor = 0;
+        for (int i = 0; i < field.length; i++) {
+            hor = 0;
+            for (int j = 0; j < field.length; j++) {
+                if (field[i][j] == EMPTY_DOT) {
+                    field[i][j] = sym;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // ход ПК  по вертикали
+    private static boolean moveAIVert(char sym) {
+        int vert = 0;
+        for (int j = 0; j < field.length; j++) {
+            vert = 0;
+            for (int i = 0; i < field.length; i++) {
+                if (field[i][j] == EMPTY_DOT) {
+                    field[i][j] = sym;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //ход ПК  по диагонали вверх
+
+    private static boolean moveAIUpDiag(int v, int h, char sym) {
+        int count=0;
+        for (int i = 0, j = 0; j < WIN_NUMS; i--, j++) {
+            if ((field[v+i][h+j] == EMPTY_DOT)){
+                field[i+v][i+h] = sym;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //ход ПК  по диагонали вниз
+
+    private static boolean moveAIDownDiag(int v, int h, char sym) {
+        int count=0;
+        for (int i = 0; i < WIN_NUMS; i++) {
+            if ((field[i+v][i+h] == EMPTY_DOT)) {
+                field[i+v][i+h] = sym;
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     // 14. Проверка победы
-    private static boolean checkHoriz(char sym){
-        int hor;
+    private static boolean checkWin(char sym) {
+
+        for (int v = 0; v<SIZE_X; v++){
+            for (int h= 0; h<SIZE_Y; h++) {
+                //анализ наличие поля для проверки
+                if (h + WIN_NUMS <= SIZE_Y) {                           //по горизонтале
+
+                    if (v - WIN_NUMS > -2) {                            //вверх по диагонале
+                        if (checkUpDiag(v, h, sym) >= WIN_NUMS) return true;
+                    }
+                    if (v + WIN_NUMS <= SIZE_X) {                       //вниз по диагонале
+                        if (checkDownDiag(v, h, sym) >= WIN_NUMS) return true;
+                    }
+
+                }
+                if (checkHoriz(v, h, sym) >= WIN_NUMS)
+                {
+                    return true;
+                }
+                if (checkVert(v, h, sym) >= WIN_NUMS)
+                {
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
+    }
+
+    // проверка победы игрока по горизонтали
+    private static int checkHoriz(int v, int h, char sym){
+        int hor = 0;
         for (int i=0; i< field.length; i++) {
             hor = 0;
             for (int j = 0; j < field.length; j++){
                 if (field[i][j] == sym)
                 {
                     hor++;
+                    if (hor >=WIN_NUMS) return hor;
                 }
                 else if ((field[i][j] != sym) && (hor < WIN_NUMS))
                 {
                     hor = 0;
                 }
             }
-            if (hor == WIN_NUMS)
-            {
-                return true;
-            }
         }
-        return false;
+        return hor;
     }
 
-    private static boolean checkVert(char sym){
-        int vert;
+    // проверка победы игрока по вертикали
+    private static int checkVert(int v, int h, char sym){
+        int vert = 0;
         for (int j=0; j< field.length; j++) {
             vert = 0;
             for (int i = 0; i < field.length; i++){
                 if (field[i][j] == sym)
                 {
                     vert++;
+                    if (vert >= WIN_NUMS) return vert;
                 }
                 else if ((field[i][j] != sym) && (vert < WIN_NUMS))
                 {
                     vert = 0;
                 }
             }
-            if (vert == WIN_NUMS)
-            {
-                return true;
-            }
         }
-        return false;
+        return vert;
     }
 
-    //проверка главной диагонали и параллеьных главной
-    private static boolean checkMainDiag(char sym) {
-        int mainDiag;
-        mainDiag = 0;
-        for (int i = 0, j = 0; i < field.length && j < field.length; i++, j++) {
+    //проверка победы игрока по диагонали вверх
 
-            if (field[i][j] == sym) {
-                mainDiag++;
-            } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                mainDiag = 0;
-            }
+    private static int checkUpDiag(int v, int h, char sym) {
+        int count=0;
+        for (int i = 0, j = 0; j < WIN_NUMS; i--, j++) {
+            if ((field[v+i][h+j] == sym)) count++;
         }
-        if (mainDiag == WIN_NUMS) {
-            return true;
-        }
-
-        //ниже главной
-        for (int k = SIZE_X - 1, n = 0; k >= 0; k--) {
-            for (int i = k, j = n; i < field.length && j < field.length; i++, j++) {
-
-                if (field[i][j] == sym) {
-                    mainDiag++;
-                } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                    mainDiag = 0;
-                }
-            }
-            if (mainDiag == WIN_NUMS) {
-                return true;
-            }
-        }
-
-        //выше главной
-        for (int k= 0, n= 1; n< field.length; n++){
-            for (int i = k, j = n; i < field.length && j < field.length; i++, j++) {
-
-                if (field[i][j] == sym) {
-                    mainDiag++;
-                } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                    mainDiag = 0;
-                }
-            }
-            if (mainDiag == WIN_NUMS) {
-                return true;
-            }
-        }
-        return false;
+        return count;
     }
 
-    //проверка побочной диагонали и параллельных ей
-    private static boolean checkSideDiag(char sym) {
-        int mainDiag;
-        mainDiag = 0;
+    //проверка победы игрока по диагонали вниз
 
-            for (int i = 0, j = SIZE_Y-1; i < field.length && j >=0; i++, j--) {
-
-                if (field[i][j] == sym) {
-                    mainDiag++;
-                } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                    mainDiag = 0;
-                }
-            }
-            if (mainDiag == WIN_NUMS) {
-                return true;
-            }
-
-        // ниже побочной
-        for (int k = SIZE_X - 1, n = SIZE_Y-1; k >=0; k--) {
-            for (int i = k, j = n; i < field.length && j>0; i++, j--) {
-
-                if (field[i][j] == sym) {
-                    mainDiag++;
-                } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                    mainDiag = 0;
-                }
-            }
-            if (mainDiag == WIN_NUMS) {
-                return true;
-            }
+    private static int checkDownDiag(int v, int h, char sym) {
+        int count=0;
+        for (int i = 0; i < WIN_NUMS; i++) {
+            if ((field[i+v][i+h] == sym)) count++;
         }
-
-        // выше побочной
-        for (int k = 0, n = SIZE_Y-2; n >=0; n--) {
-            for (int i = k, j = n; i < field.length && j>=0; i++, j--) {
-
-                if (field[i][j] == sym) {
-                    mainDiag++;
-                } else if ((field[i][j] != sym) && (mainDiag < WIN_NUMS)) {
-                    mainDiag = 0;
-                }
-            }
-            if (mainDiag == WIN_NUMS) {
-                return true;
-            }
-        }
-
-        return false;
+        return count;
     }
-
-
-
-//    private static boolean checkWin(char sym) {
-//        if (field[0][0] == sym && field[0][1] == sym && field[0][2] == sym) {
-//            return true;
-//        }
-//        if (field[1][0] == sym && field[1][1] == sym && field[1][2] == sym) {
-//            return true;
-//        }
-//        if (field[2][0] == sym && field[2][1] == sym && field[2][2] == sym) {
-//            return true;
-//        }
-//
-//        if (field[0][0] == sym && field[1][0] == sym && field[2][0] == sym) {
-//            return true;
-//        }
-//        if (field[0][1] == sym && field[1][1] == sym && field[2][1] == sym) {
-//            return true;
-//        }
-//        if (field[0][2] == sym && field[1][2] == sym && field[2][2] == sym) {
-//            return true;
-//        }
-//
-//
-//        if (field[0][0] == sym && field[1][1] == sym && field[2][2] == sym) {
-//            return true;
-//        }
-//        if (field[2][0] == sym && field[1][1] == sym && field[0][2] == sym) {
-//            return true;
-//        }
-//        return false;
-//    }
 
     // 16. Проверка полное ли поле? возможно ли ходить?
     private static boolean isFieldFull() {
@@ -285,10 +330,7 @@ public class Main {
         while (true) {
             playerStep();
             printField();
-            if((checkHoriz(PLAYER_DOT))
-                    || (checkVert(PLAYER_DOT))
-                    || (checkMainDiag(PLAYER_DOT))
-                    || (checkSideDiag(PLAYER_DOT))) {
+            if((checkWin(PLAYER_DOT))) {
                 System.out.println("Player WIN!");
                 break;
             }
@@ -297,12 +339,9 @@ public class Main {
                 break;
             }
 
-            aiStep();
+            aiStep(PLAYER_DOT);
             printField();
-            if((checkHoriz(PLAYER_DOT))
-                    || (checkVert(PLAYER_DOT))
-                    || (checkMainDiag(PLAYER_DOT))
-                    || (checkSideDiag(PLAYER_DOT))) {
+            if((checkWin(PLAYER_DOT))) {
                 System.out.println("Win SkyNet!");
                 break;
             }
